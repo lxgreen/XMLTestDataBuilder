@@ -15,7 +15,7 @@ namespace XMLTestDataBuilder
                    container.Descendants().Any(e => e.Name == elementName);
         }
 
-        public static XElement Element(this XContainer container, string elementName)
+        public static XElement GetElementByName(this XContainer container, string elementName)
         {
             return container.Descendants().SingleOrDefault(e => e.Name == elementName);
         }

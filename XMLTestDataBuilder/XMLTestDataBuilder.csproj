@@ -49,10 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IXmlTestDataBuilder.cs" />
     <Compile Include="JdbcXmlTestDataBuilder.cs" />
+    <Compile Include="PropertyAction.cs" />
+    <Compile Include="PropertyActionBase.cs" />
+    <Compile Include="TestDataBuilder.cs" />
+    <Compile Include="TestDataBuilderConfigurator.cs" />
     <Compile Include="XmlExtensions.cs" />
-    <Compile Include="XmlTestDataBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

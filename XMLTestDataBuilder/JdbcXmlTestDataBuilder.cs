@@ -1,94 +1,62 @@
-﻿using System;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace XMLTestDataBuilder
 {
-    public class JdbcXmlTestDataBuilder : XmlTestDataBuilder
+    public class JdbcXmlTestDataBuilder : TestDataBuilder<XDocument>
     {
         public JdbcXmlTestDataBuilder()
         {
-            ((IXmlTestDataBuilder) this).SetRootElement("jdbc-data-source");
-        }
+            TestData.AddFirst("jdbc-data-source");
 
-        public JdbcXmlTestDataBuilder WithJdbcDriverParams()
-        {
-            if (!Document.Root.Contains("jdbc-driver-params"))
-            {
-                var driverParams = new XElement("jdbc-driver-params");
-                ((IXmlTestDataBuilder) this).AddElement(driverParams, Document.Root);
-            }
-            return this;
-        }
-
-        public JdbcXmlTestDataBuilder WithProperties()
-        {
-            if (!Document.Root.Contains("properties"))
-            {
-                var properties = new XElement("properties");
-                ((IXmlTestDataBuilder)WithJdbcDriverParams()).AddElement(properties, 
-                    Document.Element("jdbc-driver-params"));
-            }
-            return this;
-        }
-
-        public JdbcXmlTestDataBuilder WithJdbcDataSourceParams()
-        {
-            if (!Document.Root.Contains("jdbc-data-source-params"))
-            {
-                var dataSourceParams = new XElement("jdbc-data-source-params");
-                ((IXmlTestDataBuilder)this).AddElement(dataSourceParams, Document.Root); 
-            }
-            return this;
-        }
-        public JdbcXmlTestDataBuilder WithDriverName(string driverName)
-        {
-            if (!Document.Root.Contains("driver-name"))
-            {
-                var driverNameElement = new XElement("driver-name")
+            Configure()
+                .With("jdbc-driver-params", td => AddOnce(td.Root, "jdbc-driver-params"))
+                .Without("jdbc-driver-params", td => Remove(td.Root, "jdbc-driver-params"))
+                .With("jdbc-data-source-params", td => AddOnce(td.Root, "jdbc-data-source-params"))
+                .Without("jdbc-data-source-params", td => Remove(td.Root, "jdbc-data-source-params"))
+                .With("properties", td =>
                 {
-                    Value = driverName
-                };
-                ((IXmlTestDataBuilder) WithJdbcDriverParams()).AddElement(driverNameElement,
-                    Document.Element("jdbc-driver-params"));
-            }
-            return this;
+                    AddOnce(td.Root, "jdbc-driver-params");
+                    AddOnce(td.Element("jdbc-driver-params"), "properties");
+                })
+                .Without("properties", td => Remove(td.Root, "properties"))
+                .With<string>("driver-name", (td, name) =>
+                {
+                    AddOnce(td.Root, "jdbc-driver-params");
+                    AddOnce(td.Element("jdbc-driver-params"),
+                        new XElement("driver-name") { Value = name });
+                }).
+                Without("driver-name", td => Remove(td.Root, "driver-name"))
+                .With<string, string>("property", (td, name, value) =>
+                {
+                    AddOnce(td.Root, "jdbc-driver-params");
+                    AddOnce(td.Element("jdbc-driver-params"), "properties");
+                    AddOnce(td.Element("properties"),
+                        new XElement("property",
+                            new XElement("name") { Value = name },
+                            new XElement("value") { Value = value }));
+                });
         }
 
-        public JdbcXmlTestDataBuilder WithProperty(string name, string value)
+        private void Remove(XElement container, string elementName)
         {
-            var property = new XElement("property", 
-                new XElement("name") { Value = name }, 
-                new XElement("value") { Value = value});
-
-            ((IXmlTestDataBuilder)WithProperties()).AddElement(property,
-                Document.Element("properties"));
-            return this;
-        }
-
-        public JdbcXmlTestDataBuilder WithEncryptedPassword(string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public JdbcXmlTestDataBuilder WithUrl(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public JdbcXmlTestDataBuilder WithDataType(string dataType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public JdbcXmlTestDataBuilder Valid
-        {
-            get
+            var element = container.GetElementByName(elementName);
+            if (element != null)
             {
-                return WithDriverName("oracle.driver")
-                    .WithProperty("user", "someuser")
-                    .WithJdbcDataSourceParams();
+                element.Remove();
             }
         }
 
+        private void AddOnce(XElement parent, string elementName)
+        {
+            if (parent.Contains(elementName)) return;
+            var element = new XElement(elementName);
+            parent.Add(element);
+        }
+
+        private void AddOnce(XElement parent, XElement element)
+        {
+            if (parent.Contains(element.Name.LocalName)) return;
+            parent.Add(element);
+        }
     }
 }
