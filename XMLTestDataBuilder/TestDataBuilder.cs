@@ -36,6 +36,27 @@ namespace XMLTestDataBuilder
             {
                 propertyAction.Action(TestData, value);
             }
+            else
+            {
+                throw new ArgumentException(typeof(TProperty).Name, "value");
+            }
+
+            return this;
+        }
+
+        public TestDataBuilder<T> Without(string name)
+        {
+            PropertyActionBase action;
+            if (!_configurator.WithoutActions.TryGetValue(name, out action))
+            {
+                throw new ArgumentException(name, "name");
+            }
+
+            var propertyAction = action as PropertyAction<T>;
+            if (propertyAction != null)
+            {
+                propertyAction.Action(TestData);
+            }
 
             return this;
         }
